@@ -6,6 +6,7 @@ except ImportError:
     import queue as Q
 import copy
 import datetime
+
 # moves = UP, RIGHT, DOWN, LEFT
 moves = [[-1, 0], [0, 1], [1, 0], [0, -1]]
 
@@ -87,24 +88,40 @@ def translateMoveToLetter(move):
     if m1 ==0 and m2 == -1:
             return 'L'
 
-def getIndex(board,num):
-    for i, j in enumerate(board):
-        if num in j:
-            return (num,i, j.index(num))
+def manhattanDistance(board):
+        distance = 0
+        l  = len(board)
+        for i in range(l):
+            for j in range(l):
+               if board[i][j] != 0 and board[i][j] != (n*i+j+1):
+                #Mapping to actual positions to find Manhattan distance - xA,yA are the actual positions
+                 rem = board[i][j] % l
+                 quotient = int(board[i][j] / l)
+                 if rem == 0:
+                    xA = quotient-1
+                    yA = l-1;
+                    
+                 else:
+                    xA = quotient
+                    yA = rem-1   
+                 #print(str(xA)+"  "+str(yA))
+                 distance += abs(xA-i)+abs(yA-j)
+                # print(str(board[i][j])+"  "+str(xA)+"  "+str(yA)+"  "+str(i)+"  "+str(j))
+        return distance
 
-    
 
 
 def misplacedTiles(board):
     misplaced = 0
-    manhattanDistance = 0
-    for i in range(len(board)):
-        for j in range(len(board[i])):
+    l  = len(board)
+    for i in range(l):
+        for j in range(l):
            if board[i][j] != 0 and board[i][j] != (n*i+j+1):
              misplaced += 1
-             print(getIndex(board,board[i][j]))
     return misplaced                
 
+def calculateHeuristic(board):
+    return misplacedTiles(board)+manhattanDistance(board)       
 
 def astar(board):
     print("Inside astar")
@@ -114,8 +131,10 @@ def astar(board):
     queue = Q.PriorityQueue() # queue of tuples with priority value )
     
     actualBoard = copy.deepcopy(board)
+    #visitedStates.append(actualBoard)
+    visitedStates.append([item for sublist in actualBoard for item in sublist])
     #print("actual board"+str(actualBoard))
-    queue.put((misplacedTiles(actualBoard),actualBoard,0, ''))    # (h+g,state,g)        
+    queue.put((calculateHeuristic(actualBoard),actualBoard,0, ''))    # (h+g,state,g)        
 
     while not queue.empty():
         steps += 1       
@@ -124,7 +143,14 @@ def astar(board):
         board = boardConfig[1]
         gCurrent = boardConfig[2]
         pathCurrent = boardConfig[3]
-        printBoard(board)
+        #if steps == 10:
+         #  print("ending : ")
+          # for v in visitedStates:
+           #        print(v)
+           #break;
+    #    print("**********************************************")
+     #   printBoard(board)
+      #  print("**********************************************")
         if misplacedTiles(board) == 0:                      #Check the goal state before expansion
                 final = datetime.datetime.now() - start
                 print("breaking with answer")
@@ -138,11 +164,19 @@ def astar(board):
         for move in movesList:
           #  print("Move: "+str(move))
             moveGap(board,move)             #Make the move
-            misplaced = misplacedTiles(board) #Calculate number of misplaced tiles
+            heuristic = calculateHeuristic(board) #Calculate number of misplaced tiles
            # print("No. of misplaced tiles : "+str(misplaced))
             #printBoard(board)
+            
+            oneDBoard = [item for sublist in board for item in sublist]
 
-            queue.put((misplaced+gCurrent+1,board,gCurrent+1, pathCurrent+translateMoveToLetter(move))) # add new h', ie. h+g , board, new g and current path to queue     
+            if not oneDBoard in visitedStates:
+             #       print("visited : ")
+            #        print(board)
+                    queue.put((heuristic+gCurrent+1,board,gCurrent+1, pathCurrent+translateMoveToLetter(move))) # add new h', ie. h+g , board, new g and current path to queue     
+                    #visitedStates.append(board)
+                    visitedStates.append([item for sublist in board for item in sublist])
+            
             board = copy.deepcopy(actualBoard)         #Go back to current state to check the next move
 
     print("Number of steps : "+str(steps))
@@ -231,7 +265,7 @@ if __name__ == '__main__':
                 board[i].append(a)    
         print("Initial setup :")        
         printBoard(board)   
-        print(misplacedTiles(board))
-     #   astar(board)        
+     #   print(misplacedTiles(board))
+        astar(board)        
 
     out_file.close()
