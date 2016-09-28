@@ -6,6 +6,7 @@ except ImportError:
     import queue as Q
 import copy
 import datetime
+import math
 
 # moves = UP, RIGHT, DOWN, LEFT
 moves = [[-1, 0], [0, 1], [1, 0], [0, -1]]
@@ -123,6 +124,60 @@ def misplacedTiles(board):
 def calculateHeuristic(board):
     return misplacedTiles(board)+manhattanDistance(board)       
 
+
+stackNodes = 0
+maxNodes = 0
+
+def iterativeDeepen(board,g,bound,path):
+    global stackNodes
+    global maxNodes
+    f = g+calculateHeuristic(board)
+    if f > bound:          # if we find a node with h value greater than current bound, then 
+        return [f,False]   # return this bound to be used as next bound and indicate it is not success
+
+    elif  misplacedTiles(board) == 0:  # Perform goal test
+        print("Success path = "+path)
+        return [f,True]                   # return success if Goal State found  
+
+    actualBoard = copy.deepcopy(board)    
+    minBound = math.inf
+    movesList = possibleMoves(board)
+    for move in movesList:
+        moveGap(board,move)        
+        printBoard(board)           
+        stackNodes += 1
+        if  maxNodes < stackNodes:
+                maxNodes = stackNodes                           #Make the move to create the next state
+        nextBound,success = iterativeDeepen(board,g+1, bound,path+translateMoveToLetter(move))          # Perform iterative deepening for the next state
+        if success == True:
+            print("Found result")
+            print("Max nodes in stack : ")
+            print(maxNodes)
+            print(path)
+            print("cost = "+str(g))
+            return [nextBound,True]
+
+        if nextBound < minBound:
+            minBound = nextBound
+
+        board = copy.deepcopy(actualBoard) 
+
+    return minBound    
+
+
+def idastar(board):
+    actualBoard = board
+    bound = calculateHeuristic(board)
+    while True:
+        print("bound = "+str(bound))
+        nextBound,success = iterativeDeepen(actualBoard,0,bound,'')
+        if success == True:
+            print("Finished")
+            break;
+        else:
+            bound = nextBound     
+
+
 def astar(board):
     print("Inside astar")
     start = datetime.datetime.now()
@@ -143,6 +198,12 @@ def astar(board):
         board = boardConfig[1]
         gCurrent = boardConfig[2]
         pathCurrent = boardConfig[3]
+        print("current g"+str(fCurrent))
+        print(boardConfig)
+        print("f in queue")
+        for q in queue.queue:
+            print(q)
+            print("f = "+str(q[0]))
         #if steps == 10:
          #  print("ending : ")
           # for v in visitedStates:
@@ -151,6 +212,7 @@ def astar(board):
     #    print("**********************************************")
      #   printBoard(board)
       #  print("**********************************************")
+        print(misplacedTiles(board))
         if misplacedTiles(board) == 0:                      #Check the goal state before expansion
                 final = datetime.datetime.now() - start
                 print("breaking with answer")
@@ -158,6 +220,10 @@ def astar(board):
                 print("answer path is "+pathCurrent)
                 print("Time taken : ")
                 print(final.total_seconds())
+                print("Visited states")
+                print(len(visitedStates))
+                print("Queue len ")
+                print(len(queue.queue))    
                 break;
         actualBoard = copy.deepcopy(board)
         movesList = possibleMoves(board)
@@ -169,10 +235,15 @@ def astar(board):
             #printBoard(board)
             
             oneDBoard = [item for sublist in board for item in sublist]
-
+            if oneDBoard in visitedStates:    
+                print("not adding :",end="")
+                print(board)
             if not oneDBoard in visitedStates:
              #       print("visited : ")
             #        print(board)
+                    print("adding is : ",end="")
+                    print(board)
+                    print(heuristic+gCurrent+1)
                     queue.put((heuristic+gCurrent+1,board,gCurrent+1, pathCurrent+translateMoveToLetter(move))) # add new h', ie. h+g , board, new g and current path to queue     
                     #visitedStates.append(board)
                     visitedStates.append([item for sublist in board for item in sublist])
@@ -255,7 +326,7 @@ if __name__ == '__main__':
                 out_file.write("\n")
 
     else:
-        print("THIS")
+        print("Solving Mode ")
         board = []
         for i in range(n):
             currentLine = in_file.readline().split(',')
@@ -264,8 +335,13 @@ if __name__ == '__main__':
                 a = 0 if currentNumber=='\n' or currentNumber == '' else int(currentNumber)
                 board[i].append(a)    
         print("Initial setup :")        
-        printBoard(board)   
-     #   print(misplacedTiles(board))
-        astar(board)        
+        printBoard(board)
+        
+        if algo == 1:
+            
+         #   print(misplacedTiles(board))
+            astar(board)        
+        elif algo == 2:    
+            idastar(board)
 
     out_file.close()
