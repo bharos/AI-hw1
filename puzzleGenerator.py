@@ -128,33 +128,55 @@ def calculateHeuristic(board):
 stackNodes = 0
 maxNodes = 0
 
-def iterativeDeepen(board,g,bound,path):
+def iterativeDeepen(board,g,bound,visitedStates,path):
     global stackNodes
     global maxNodes
-    f = g+calculateHeuristic(board)
+    #print(path)
+   # print("next")
+
+    #oneDBoard = [item for sublist in board for item in sublist]
+    f = g+manhattanDistance(board)
+    #print("g = "+str(g)+"  h = "+str(manhattanDistance(board))+"  f= "+str(f))
+    #f = g+ misplacedTiles(board)
+    #visitedStates.append(oneDBoard)
+    #print("visited states are :")
+    #print(visitedStates)
+    #print(board,end="")
+    #print(g+manhattanDistance(board))
     if f > bound:          # if we find a node with h value greater than current bound, then 
         return [f,False]   # return this bound to be used as next bound and indicate it is not success
 
-    elif  misplacedTiles(board) == 0:  # Perform goal test
+    if  misplacedTiles(board) == 0:  # Perform goal test
         print("Success path = "+path)
-        return [f,True]                   # return success if Goal State found  
+        print("Found result")
+        print("Max nodes in stack : ")
+        print(maxNodes)
+
+        print("cost = "+str(g))      
+        return [f,True]             # return success if Goal State found  
 
     actualBoard = copy.deepcopy(board)    
     minBound = math.inf
     movesList = possibleMoves(board)
     for move in movesList:
-        moveGap(board,move)        
-        printBoard(board)           
+        moveGap(board,move)
+        #print(visitedStates)
+        #oneDBoard = [item for sublist in board for item in sublist]
+        #if oneDBoard in visitedStates:
+         #   print("already in")
+         #   continue        
+        #printBoard(board)           
         stackNodes += 1
         if  maxNodes < stackNodes:
                 maxNodes = stackNodes                           #Make the move to create the next state
-        nextBound,success = iterativeDeepen(board,g+1, bound,path+translateMoveToLetter(move))          # Perform iterative deepening for the next state
+           #     print("Max nodes in stack : ",end=" ")
+        #print(maxNodes)
+        nextBound,success = iterativeDeepen(board,g+1,bound,visitedStates,path+translateMoveToLetter(move))          # Perform iterative deepening for the next state
+        stackNodes -= 1
+        #visitedStates.remove([oneDBoard,path+translateMoveToLetter(move),g+1+manhattanDistance(board)])
+        #print("v len",end="")
+        #print(len(visitedStates))
         if success == True:
-            print("Found result")
-            print("Max nodes in stack : ")
-            print(maxNodes)
-            print(path)
-            print("cost = "+str(g))
             return [nextBound,True]
 
         if nextBound < minBound:
@@ -162,18 +184,30 @@ def iterativeDeepen(board,g,bound,path):
 
         board = copy.deepcopy(actualBoard) 
 
-    return minBound    
+    return [minBound,False]    
 
 
 def idastar(board):
-    actualBoard = board
-    bound = calculateHeuristic(board)
+    print("Inside IDA*")
+    start = datetime.datetime.now()
+    actualBoard = copy.deepcopy(board)
+    bound = manhattanDistance(actualBoard)
+  #  bound = misplacedTiles(board)
     while True:
-        print("bound = "+str(bound))
-        nextBound,success = iterativeDeepen(actualBoard,0,bound,'')
+       # print("bound = "+str(bound))
+        #print("actual borad  = ",end="")
+        #print(actualBoard)
+        #print("board = ",end="")
+        #print(board)
+        #print("########")
+        board = copy.deepcopy(actualBoard)
+        nextBound,success = iterativeDeepen(board,0,bound,[],'')
         if success == True:
-            print("Finished")
-            break;
+            final = datetime.datetime.now()-start
+            #print("Finished")
+            print("Time taken : ")
+            print(final.total_seconds())
+            break
         else:
             bound = nextBound     
 
@@ -189,7 +223,7 @@ def astar(board):
     #visitedStates.append(actualBoard)
     visitedStates.append([item for sublist in actualBoard for item in sublist])
     #print("actual board"+str(actualBoard))
-    queue.put((calculateHeuristic(actualBoard),actualBoard,0, ''))    # (h+g,state,g)        
+    queue.put((manhattanDistance(actualBoard),actualBoard,0, ''))    # (h+g,state,g)        
 
     while not queue.empty():
         steps += 1       
@@ -198,12 +232,12 @@ def astar(board):
         board = boardConfig[1]
         gCurrent = boardConfig[2]
         pathCurrent = boardConfig[3]
-        print("current g"+str(fCurrent))
-        print(boardConfig)
-        print("f in queue")
-        for q in queue.queue:
-            print(q)
-            print("f = "+str(q[0]))
+        # print("current g"+str(fCurrent))
+        # print(boardConfig)
+        # print("f in queue")
+        # for q in queue.queue:
+        #     print(q)
+        #     print("f = "+str(q[0]))
         #if steps == 10:
          #  print("ending : ")
           # for v in visitedStates:
@@ -212,7 +246,7 @@ def astar(board):
     #    print("**********************************************")
      #   printBoard(board)
       #  print("**********************************************")
-        print(misplacedTiles(board))
+      #  print(misplacedTiles(board))
         if misplacedTiles(board) == 0:                      #Check the goal state before expansion
                 final = datetime.datetime.now() - start
                 print("breaking with answer")
@@ -230,23 +264,24 @@ def astar(board):
         for move in movesList:
           #  print("Move: "+str(move))
             moveGap(board,move)             #Make the move
-            heuristic = calculateHeuristic(board) #Calculate number of misplaced tiles
+            heuristic = manhattanDistance(board) #Calculate number of misplaced tiles
            # print("No. of misplaced tiles : "+str(misplaced))
             #printBoard(board)
             
             oneDBoard = [item for sublist in board for item in sublist]
-            if oneDBoard in visitedStates:    
-                print("not adding :",end="")
-                print(board)
+            # if oneDBoard in visitedStates:    
+            #     print("not adding :",end="")
+            #     print(board)
             if not oneDBoard in visitedStates:
              #       print("visited : ")
             #        print(board)
-                    print("adding is : ",end="")
-                    print(board)
-                    print(heuristic+gCurrent+1)
+                    # print("adding is : ",end="")
+                    # print(board)
+                    # print(heuristic+gCurrent+1)
                     queue.put((heuristic+gCurrent+1,board,gCurrent+1, pathCurrent+translateMoveToLetter(move))) # add new h', ie. h+g , board, new g and current path to queue     
                     #visitedStates.append(board)
                     visitedStates.append([item for sublist in board for item in sublist])
+
             
             board = copy.deepcopy(actualBoard)         #Go back to current state to check the next move
 
