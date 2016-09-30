@@ -10,7 +10,7 @@ import math
 
 # moves = UP, RIGHT, DOWN, LEFT
 moves = [[-1, 0], [0, 1], [1, 0], [0, -1]]
-
+out_file = ''
 def isPositionLegal(board, x, y):
     n = len(board)
     return ((x >= 0) and (x < n) and (y >= 0) and (y < n))
@@ -28,16 +28,6 @@ def canMove(board, direction):
     x2, y2 = nextPos(x, y, mv)
 
     return isPositionLegal(board, x2, y2)
-
-# def canMove(board):
-#     x, y = findGap(board)
-#
-#     for mv in moves:
-#         x2, y2 = nextPos(x, y, mv)
-#         if isPositionLegal(board, x2, y2):
-#             return True
-#
-#     return False
 
 def possibleMoves(board):
 
@@ -78,6 +68,14 @@ def printBoard(board):
             row_str += str(cell) + " "
         print(row_str)
 
+def write_output(path):
+    global out_file
+    f = open(out_file,'w')
+    f.write(','.join(list(path)))
+    f.close()
+
+
+#Map moves to letters to create the output, ie. path to optimal solution
 def translateMoveToLetter(move):
     m1,m2 = move
     if m1 == -1 and m2 == 0:
@@ -89,6 +87,7 @@ def translateMoveToLetter(move):
     if m1 ==0 and m2 == -1:
             return 'L'
 
+#Calculate manhattan distance for the current state Sum(|xi-xG| + |yi-yG|)
 def manhattanDistance(board):
         distance = 0
         l  = len(board)
@@ -100,7 +99,7 @@ def manhattanDistance(board):
                  quotient = int(board[i][j] / l)
                  if rem == 0:
                     xA = quotient-1
-                    yA = l-1;
+                    yA = l-1
                     
                  else:
                     xA = quotient
@@ -111,7 +110,7 @@ def manhattanDistance(board):
         return distance
 
 
-
+#Calculate the number of misplaced tiles in the current state
 def misplacedTiles(board):
     misplaced = 0
     l  = len(board)
@@ -121,109 +120,93 @@ def misplacedTiles(board):
              misplaced += 1
     return misplaced                
 
-def calculateHeuristic(board):
-    return misplacedTiles(board)+manhattanDistance(board)       
+
+# def calculateHeuristic(board):
+#     return misplacedTiles(board)+manhattanDistance(board)       
 
 
-stackNodes = 0
-maxNodes = 0
+stackNodes = 0 #Number of nodes in the stack at a given point
+maxNodes = 0 # To track the maximum number of nodes at any point in the stack
 
 def iterativeDeepen(board,g,bound,visitedStates,path):
     global stackNodes
     global maxNodes
-    #print(path)
-   # print("next")
 
     #oneDBoard = [item for sublist in board for item in sublist]
-    f = g+manhattanDistance(board)
-    #print("g = "+str(g)+"  h = "+str(manhattanDistance(board))+"  f= "+str(f))
-    #f = g+ misplacedTiles(board)
-    #visitedStates.append(oneDBoard)
-    #print("visited states are :")
-    #print(visitedStates)
-    #print(board,end="")
-    #print(g+manhattanDistance(board))
+    f = g+manhattanDistance(board) #Calculate the f value, f = g + h
+    
     if f > bound:          # if we find a node with h value greater than current bound, then 
         return [f,False]   # return this bound to be used as next bound and indicate it is not success
 
-    if  misplacedTiles(board) == 0:  # Perform goal test
+    if  misplacedTiles(board) == 0:  # Perform goal test checking if there are any misplaced tiles
         print("Success path = "+path)
         print("Found result")
         print("Max nodes in stack : ")
         print(maxNodes)
+        write_output(path)
 
         print("cost = "+str(g))      
         return [f,True]             # return success if Goal State found  
 
     actualBoard = copy.deepcopy(board)    
-    minBound = math.inf
+    minBound = math.inf                 # The bound for next iteration is populated in this variable, ie. the minimum value of the max bounds we encounter
     movesList = possibleMoves(board)
-    for move in movesList:
-        moveGap(board,move)
-        #print(visitedStates)
+    for move in movesList:              #For each next move possible,
+        moveGap(board,move)             #Make the move to create the next state
+        
         #oneDBoard = [item for sublist in board for item in sublist]
         #if oneDBoard in visitedStates:
-         #   print("already in")
          #   continue        
-        #printBoard(board)           
-        stackNodes += 1
+        stackNodes += 1                 # Increase current value of depth of nodes in stack
         if  maxNodes < stackNodes:
-                maxNodes = stackNodes                           #Make the move to create the next state
-           #     print("Max nodes in stack : ",end=" ")
-        #print(maxNodes)
-        nextBound,success = iterativeDeepen(board,g+1,bound,visitedStates,path+translateMoveToLetter(move))          # Perform iterative deepening for the next state
-        stackNodes -= 1
+                maxNodes = stackNodes   #If it is greater than existing maxNodes, make it as maxNodes value                        
+        nextBound,success = iterativeDeepen(board,g+1,bound,visitedStates,path+translateMoveToLetter(move)) # Perform iterative deepening for the next state
+        stackNodes -= 1   #Reduce count of stackNodes as node is removed from stack
+        
         #visitedStates.remove([oneDBoard,path+translateMoveToLetter(move),g+1+manhattanDistance(board)])
-        #print("v len",end="")
-        #print(len(visitedStates))
+        
         if success == True:
-            return [nextBound,True]
+            return [nextBound,True] 
 
         if nextBound < minBound:
-            minBound = nextBound
+            minBound = nextBound    # Update minBound if we find a lesser value for next bound
 
-        board = copy.deepcopy(actualBoard) 
+        board = copy.deepcopy(actualBoard) #Copy back actual state of board in this state to generate next move on top of it
 
-    return [minBound,False]    
+    return [minBound,False]    #Solution not found, hence return minBound,ie. bound for next iteration
 
 
 def idastar(board):
     print("Inside IDA*")
-    start = datetime.datetime.now()
+    start = datetime.datetime.now()             #To calculate time of execution
     actualBoard = copy.deepcopy(board)
-    bound = manhattanDistance(actualBoard)
-  #  bound = misplacedTiles(board)
+    bound = manhattanDistance(actualBoard)      #Initial bound is the h value of root
+
     while True:
-       # print("bound = "+str(bound))
-        #print("actual borad  = ",end="")
-        #print(actualBoard)
-        #print("board = ",end="")
-        #print(board)
-        #print("########")
         board = copy.deepcopy(actualBoard)
-        nextBound,success = iterativeDeepen(board,0,bound,[],'')
-        if success == True:
+        nextBound,success = iterativeDeepen(board,0,bound,[],'')  # Perform iterative deepening, always from root,ie. g = 0
+        if success == True:                         # If success, ie. goal found
             final = datetime.datetime.now()-start
             #print("Finished")
             print("Time taken : ")
             print(final.total_seconds())
             break
         else:
-            bound = nextBound     
+            bound = nextBound     #If not success, update bound to nextBound for next iteration
 
 
 def astar(board):
     print("Inside astar")
-    start = datetime.datetime.now()
-    visitedStates = []
-    steps = 0
-    queue = Q.PriorityQueue() # queue of tuples with priority value )
+    start = datetime.datetime.now()    # To calculate time of execution
+    visitedStates = []                 # List to keep track of visited states
+    steps = 0                          # keeping track of steps for analysis purposes
+    queue = Q.PriorityQueue() # queue of tuples with priority as the f value of the state)
     
     actualBoard = copy.deepcopy(board)
     #visitedStates.append(actualBoard)
-    visitedStates.append([item for sublist in actualBoard for item in sublist])
+    visitedStates.append([item for sublist in actualBoard for item in sublist]) #Add the initial state into visited list
     #print("actual board"+str(actualBoard))
-    queue.put((manhattanDistance(actualBoard),actualBoard,0, ''))    # (h+g,state,g)        
+    queue.put((manhattanDistance(actualBoard),actualBoard,0, ''))    # (h+g,state,g,path)        
 
     while not queue.empty():
         steps += 1       
@@ -232,22 +215,8 @@ def astar(board):
         board = copy.deepcopy(boardConfig[1])
         gCurrent = boardConfig[2]
         pathCurrent = boardConfig[3]
-        # print("current g"+str(fCurrent))
-        # print(boardConfig)
-        # print("f in queue")
-        # for q in queue.queue:
-        #     print(q)
-        #     print("f = "+str(q[0]))
-        #if steps == 10:
-         #  print("ending : ")
-          # for v in visitedStates:
-           #        print(v)
-           #break;
-    #    print("**********************************************")
-     #   printBoard(board)
-      #  print("**********************************************")
-      #  print(misplacedTiles(board))
-        if misplacedTiles(board) == 0:                      #Check the goal state before expansion
+
+        if misplacedTiles(board) == 0:                      #Check the goal state after poping state out of queue
                 final = datetime.datetime.now() - start
                 print("breaking with answer")
                 printBoard(board)
@@ -257,30 +226,24 @@ def astar(board):
                 print("Visited states")
                 print(len(visitedStates))
                 print("Queue len ")
-                print(len(queue.queue))    
+                print(len(queue.queue))   
+
+                write_output(pathCurrent) 
                 break;
         actualBoard = copy.deepcopy(board)
-        movesList = possibleMoves(board)
-        for move in movesList:
+        movesList = possibleMoves(board)   #Collect all possible moves possible
+        for move in movesList:             #Try each move possible
           #  print("Move: "+str(move))
             moveGap(board,move)             #Make the move
-            heuristic = manhattanDistance(board) #Calculate number of misplaced tiles
-           # print("No. of misplaced tiles : "+str(misplaced))
-            #printBoard(board)
+            heuristic = manhattanDistance(board) #Calculate the heuristic of this state
             
             oneDBoard = [item for sublist in board for item in sublist]
-            # if oneDBoard in visitedStates:    
-            #     print("not adding :",end="")
-            #     print(board)
-            if not oneDBoard in visitedStates:
-             #       print("visited : ")
-            #        print(board)
-                    # print("adding is : ",end="")
-                    # print(board)
-                    # print(heuristic+gCurrent+1)
-                    queue.put((heuristic+gCurrent+1,board,gCurrent+1, pathCurrent+translateMoveToLetter(move))) # add new h', ie. h+g , board, new g and current path to queue     
-                    #visitedStates.append(board)
+            if not oneDBoard in visitedStates:      # If not present in visitedStates, add it to visited state
                     visitedStates.append([item for sublist in board for item in sublist])
+
+                    queue.put((heuristic+gCurrent+1,board,gCurrent+1, pathCurrent+translateMoveToLetter(move))) # add new h', ie. h+g , board, new g and current path to queue     
+                    
+
 
             
             board = copy.deepcopy(actualBoard)         #Go back to current state to check the next move
@@ -288,79 +251,21 @@ def astar(board):
     print("Number of steps : "+str(steps))
 
 if __name__ == '__main__':
-
     n = 0
     k = -1
     algo = -1
     in_file = ''
-    out_file = ''
-    process_input = False
+
 
     if len(sys.argv) == 5:
         print("here")
         algo = int(sys.argv[1])
         n = int(sys.argv[2])
         in_file = open(sys.argv[3],'r')
-        out_file = open(sys.argv[4],'w')
-        process_input = True
-    elif len(sys.argv) == 4:
-        n = int(sys.argv[1])
-        k = int(sys.argv[2])
-        out_file = open(sys.argv[3], 'w')
-    elif len(sys.argv) == 3:
-        n = int(sys.argv[1])
-        out_file = open(sys.argv[2], 'w')
-    else:
-        print('Wrong number of arguments. Usage:\npuzzleGenerator.py <N> <K - number of moves> <OUTPATH>\npuzzleGenerator.py <N> <OUTPATH>')
-    print('n = ' + str(n))
-    print('k = '+str(k))
-    print('algo = '+str(algo))
-    if process_input == False:
-        if k == -1:
-            a = list(range(1, n*n + 1))
-            random.shuffle(a)
-
-            for i in range(n):
-                for j in range(n):
-                    cur = a[i * n + j]
-                    if cur == (n*n):
-                        out_file.write('')
-                    else:
-                        out_file.write(str(cur))
-                    if j != (n-1):
-                        out_file.write(',')
-                out_file.write('\n')
-        else:
-            board = []
-            for i in range(n):
-                board.append([])
-                for j in range(n):
-                    if (n*i+j+1) == n*n:
-                        board[i].append(0)
-                    else:
-                        board[i].append(n * i + j + 1)
-
-            printBoard(board)
-
-            for move_cnt in range(k):
-                pos_moves = possibleMoves(board)
-                move = random.choice(pos_moves)
-                moveGap(board, move)
-
-            printBoard(board)
-
-            for row in board:
-                for i in range(len(row)):
-                    cell = row[i]
-                    if cell != 0:
-                        out_file.write(str(cell))
-                    if i != (len(row) - 1):
-                        out_file.write(",")
-
-
-                out_file.write("\n")
-
-    else:
+        out_file = sys.argv[4]
+        print('n = ' + str(n))
+        print('k = '+str(k))
+        print('algo = '+str(algo))
         print("Solving Mode ")
         board = []
         for i in range(n):
@@ -373,10 +278,9 @@ if __name__ == '__main__':
         printBoard(board)
         
         if algo == 1:
-            
-         #   print(misplacedTiles(board))
             astar(board)        
         elif algo == 2:    
             idastar(board)
 
-    out_file.close()
+    else:
+        print('Wrong number of arguments. Usage:\npuzzleSolver.py <A - Algorithm No.> <N -Puzzle Format> <INPUT_FILE_PATH> <OUTPUT_FILE_PATH>')
