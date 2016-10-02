@@ -214,8 +214,8 @@ def idastar(board):
         if success == True:                         # If success, ie. goal found
             final = datetime.datetime.now()-start
             #print("Finished")
-            print("Time taken : ")
-            print(final.total_seconds())
+            print("Time taken (in milliseconds) : ",end="")
+            print(final.total_seconds()*1000)
             break
         else:
             bound = nextBound     #If not success, update bound to nextBound for next iteration
@@ -247,12 +247,14 @@ def astar(board):
                 print("breaking with answer")
                 printBoard(board)
                 print("answer path is "+pathCurrent)
-                print("Time taken : ")
-                print(final.total_seconds())
-                print("Visited states")
+                print("Time taken (in milliseconds)  : ",end="")
+                print(final.total_seconds()*1000)
+                print("Visited states: ",end = "")
                 print(len(visitedStates))
-                print("Queue len ")
+                print("Queue len:  ",end="")
                 print(len(queue.queue))   
+                print("Explored states : ",end = "")
+                print(len(visitedStates)-len(queue.queue))
 
                 write_output(pathCurrent) 
                 break;
