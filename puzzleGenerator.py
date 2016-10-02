@@ -151,7 +151,7 @@ def iterativeDeepen(board,g,bound,visitedStates,path):
         print("Found result")
         print("Max nodes in stack : ")
         print(maxNodes)
-
+        
         print("cost = "+str(g))      
         return [f,True]             # return success if Goal State found  
 

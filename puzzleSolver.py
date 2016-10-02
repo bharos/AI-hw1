@@ -132,9 +132,20 @@ def iterativeDeepen(board,g,bound,visitedStates,path):
     global stackNodes
     global maxNodes
 
+    #print(visitedStates)
+    oneDBoard = [item for sublist in board for item in sublist]
+    if not oneDBoard in visitedStates:
+            
+        visitedStates.append(oneDBoard)
+            #print("adding to visited : ")
+            #print(oneDBoard)
+
     #oneDBoard = [item for sublist in board for item in sublist]
     f = g+manhattanDistance(board) #Calculate the f value, f = g + h
     
+  #  print(bound)
+  
+
     if f > bound:          # if we find a node with h value greater than current bound, then 
         return [f,False]   # return this bound to be used as next bound and indicate it is not success
 
@@ -148,23 +159,36 @@ def iterativeDeepen(board,g,bound,visitedStates,path):
         print("cost = "+str(g))      
         return [f,True]             # return success if Goal State found  
 
+
     actualBoard = copy.deepcopy(board)    
-    minBound = math.inf                 # The bound for next iteration is populated in this variable, ie. the minimum value of the max bounds we encounter
+    minBound = math.inf     
+                # The bound for next iteration is populated in this variable, ie. the minimum value of the max bounds we encounter
     movesList = possibleMoves(board)
     for move in movesList:              #For each next move possible,
         moveGap(board,move)             #Make the move to create the next state
         
-        #oneDBoard = [item for sublist in board for item in sublist]
-        #if oneDBoard in visitedStates:
-         #   continue        
+
+        oneDBoard = [item for sublist in board for item in sublist]
+       # print("actual =  ",end="  ")
+       # print(actualBoard)
+       # print("move =  ",end="  ")
+       # print(translateMoveToLetter(move))
+       # print("board ==   ",end="   ")
+       # print(oneDBoard)
+        if oneDBoard in visitedStates:
+        #    print("already = ",end="    ")
+         #   print(oneDBoard)
+            board = copy.deepcopy(actualBoard) #Copy back actual state of board in this state to generate next move on top of it
+            continue        
+        
         stackNodes += 1                 # Increase current value of depth of nodes in stack
         if  maxNodes < stackNodes:
-                maxNodes = stackNodes   #If it is greater than existing maxNodes, make it as maxNodes value                        
+                maxNodes = stackNodes   #If it is greater than existing maxNodes, make it as maxNodes value           
+
+
         nextBound,success = iterativeDeepen(board,g+1,bound,visitedStates,path+translateMoveToLetter(move)) # Perform iterative deepening for the next state
         stackNodes -= 1   #Reduce count of stackNodes as node is removed from stack
-        
-        #visitedStates.remove([oneDBoard,path+translateMoveToLetter(move),g+1+manhattanDistance(board)])
-        
+
         if success == True:
             return [nextBound,True] 
 
@@ -173,8 +197,8 @@ def iterativeDeepen(board,g,bound,visitedStates,path):
 
         board = copy.deepcopy(actualBoard) #Copy back actual state of board in this state to generate next move on top of it
 
+        
     return [minBound,False]    #Solution not found, hence return minBound,ie. bound for next iteration
-
 
 def idastar(board):
     print("Inside IDA*")
@@ -183,6 +207,8 @@ def idastar(board):
     bound = manhattanDistance(actualBoard)      #Initial bound is the h value of root
 
     while True:
+       
+
         board = copy.deepcopy(actualBoard)
         nextBound,success = iterativeDeepen(board,0,bound,[],'')  # Perform iterative deepening, always from root,ie. g = 0
         if success == True:                         # If success, ie. goal found
