@@ -11,6 +11,7 @@ import math
 # moves = UP, RIGHT, DOWN, LEFT
 moves = [[-1, 0], [0, 1], [1, 0], [0, -1]]
 out_file = ''
+f=''
 def isPositionLegal(board, x, y):
     n = len(board)
     return ((x >= 0) and (x < n) and (y >= 0) and (y < n))
@@ -68,11 +69,13 @@ def printBoard(board):
             row_str += str(cell) + " "
         print(row_str)
 
-def write_output(path):
+
+def write_output(path,calc):
     global out_file
-    f = open(out_file,'w')
+    global f    
     f.write(','.join(list(path)))
-    f.close()
+    f.write("$"+calc+"\n")
+    
 
 
 #Map moves to letters to create the output, ie. path to optimal solution
@@ -137,14 +140,9 @@ def iterativeDeepen(board,g,bound,visitedStates,path):
     if not oneDBoard in visitedStates:
             
         visitedStates.append(oneDBoard)
-            #print("adding to visited : ")
-            #print(oneDBoard)
-
-    #oneDBoard = [item for sublist in board for item in sublist]
-    f = g+manhattanDistance(board) #Calculate the f value, f = g + h
     
-  #  print(bound)
-  
+    f = g+manhattanDistance(board) #Calculate the f value, f = g + h
+
 
     if f > bound:          # if we find a node with h value greater than current bound, then 
         return [f,False]   # return this bound to be used as next bound and indicate it is not success
@@ -154,7 +152,7 @@ def iterativeDeepen(board,g,bound,visitedStates,path):
         print("Found result")
         print("Max nodes in stack : ")
         print(maxNodes)
-        write_output(path)
+        write_output(path+"$"+str(maxNodes)+"$"+depth)
 
         print("cost = "+str(g))      
         return [f,True]             # return success if Goal State found  
@@ -169,22 +167,14 @@ def iterativeDeepen(board,g,bound,visitedStates,path):
         
 
         oneDBoard = [item for sublist in board for item in sublist]
-       # print("actual =  ",end="  ")
-       # print(actualBoard)
-       # print("move =  ",end="  ")
-       # print(translateMoveToLetter(move))
-       # print("board ==   ",end="   ")
-       # print(oneDBoard)
+   
         if oneDBoard in visitedStates:
-        #    print("already = ",end="    ")
-         #   print(oneDBoard)
             board = copy.deepcopy(actualBoard) #Copy back actual state of board in this state to generate next move on top of it
             continue        
         
         stackNodes += 1                 # Increase current value of depth of nodes in stack
         if  maxNodes < stackNodes:
                 maxNodes = stackNodes   #If it is greater than existing maxNodes, make it as maxNodes value           
-
 
         nextBound,success = iterativeDeepen(board,g+1,bound,visitedStates,path+translateMoveToLetter(move)) # Perform iterative deepening for the next state
         stackNodes -= 1   #Reduce count of stackNodes as node is removed from stack
@@ -221,7 +211,7 @@ def idastar(board):
             bound = nextBound     #If not success, update bound to nextBound for next iteration
 
 
-def astar(board):
+def astar(board,heu):
     print("Inside astar")
     start = datetime.datetime.now()    # To calculate time of execution
     visitedStates = []                 # List to keep track of visited states
@@ -232,7 +222,10 @@ def astar(board):
     #visitedStates.append(actualBoard)
     visitedStates.append([item for sublist in actualBoard for item in sublist]) #Add the initial state into visited list
     #print("actual board"+str(actualBoard))
-    queue.put((manhattanDistance(actualBoard),actualBoard,0, ''))    # (h+g,state,g,path)        
+    if heu == 1:
+        queue.put((misplacedTiles(actualBoard),actualBoard,0, ''))    # (h+g,state,g,path)        
+    else:
+        queue.put((manhattanDistance(actualBoard),actualBoard,0, ''))    # (h+g,state,g,path)        
 
     while not queue.empty():
         steps += 1       
@@ -255,15 +248,20 @@ def astar(board):
                 print(len(queue.queue))   
                 print("Explored states : ",end = "")
                 print(len(visitedStates)-len(queue.queue))
-
-                write_output(pathCurrent) 
+                explored = len(visitedStates)-len(queue.queue)
+                print("Depth : ")
+                print(len(pathCurrent))
+                write_output(pathCurrent,str(explored)+"$"+str(final.total_seconds()*1000)+"$"+str(len(pathCurrent))) 
                 break;
         actualBoard = copy.deepcopy(board)
         movesList = possibleMoves(board)   #Collect all possible moves possible
         for move in movesList:             #Try each move possible
           #  print("Move: "+str(move))
             moveGap(board,move)             #Make the move
-            heuristic = manhattanDistance(board) #Calculate the heuristic of this state
+            if heu == 1:
+                heuristic = misplacedTiles(board)
+            else:
+                heuristic = manhattanDistance(board) #Calculate the heuristic of this state
             
             oneDBoard = [item for sublist in board for item in sublist]
             if not oneDBoard in visitedStates:      # If not present in visitedStates, add it to visited state
@@ -276,7 +274,7 @@ def astar(board):
             
             board = copy.deepcopy(actualBoard)         #Go back to current state to check the next move
 
-    print("Number of steps : "+str(steps))
+    #print("Number of steps : "+str(steps))
 
 if __name__ == '__main__':
     n = 0
@@ -291,6 +289,7 @@ if __name__ == '__main__':
         n = int(sys.argv[2])
         in_file = open(sys.argv[3],'r')
         out_file = sys.argv[4]
+        f = open(out_file,'w')
         print('n = ' + str(n))
         print('k = '+str(k))
         print('algo = '+str(algo))
@@ -306,7 +305,9 @@ if __name__ == '__main__':
         printBoard(board)
         
         if algo == 1:
-            astar(board)        
+            astar(board,1)     
+            astar(board,2)   
+            f.close()
         elif algo == 2:    
             idastar(board)
 

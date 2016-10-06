@@ -1,0 +1,81 @@
+	   PATH  	EXPLORED  	    time in ms  	  DEPTH   
+
+66	L,U,R,U,L,D,D,R,U,U,L,L,D,R,U,R,D,L,D,R	2186	665.103	20
+
+66		L,U,R,U,L,D,D,R,U,U,L,L,D,R,U,R,D,L,D,R		336		64.083		20
+
+18	U,U,L,L,D,R,D,R	9	1.5050000000000001	8
+
+18		U,U,L,L,D,R,D,R		9		0.0		8
+
+16	D,L,D,R	5	0.0	4
+
+16		D,L,D,R		5		0.0		4
+
+2		1	0.0	0
+
+2				1		0.0		0
+
+43	L,D,R,D,L,U,U,R,R,D,L,D,L,U,R,R,D	800	152.59900000000002	17
+
+43		L,D,R,D,L,U,U,R,R,D,L,D,L,U,R,R,D		241		44.175		17
+
+53	L,U,U,R,D,D,L,U,U,R,R,D,L,L,D,R,U,R,D	1733	442.885	19
+
+53		L,U,R,U,L,D,D,R,U,U,R,D,D,L,L,U,R,D,R		233		39.577		19
+
+21	R,D,D	4	0.0	3
+
+21		R,D,D		4		4.005		3
+
+15	L,D,R	4	4.016	3
+
+15		L,D,R		4		0.0		3
+
+8	L,D,R,D	5	0.0	4
+
+8		L,D,R,D		5		0.0		4
+
+57	D,L,U,L,D,R,R,U,L,D,R	59	20.027	11
+
+57		D,L,U,L,D,R,R,U,L,D,R		31		12.014999999999999		11
+
+13	D,R,R	4	4.024	3
+
+13		D,R,R		4		0.0		3
+
+49	R,U,L,L,D,R,U,L,U,R,D,D,R	121	18.561	13
+
+49		R,U,L,L,D,R,U,L,U,R,D,D,R		25		4.025		13
+
+11	L,U,R,D,D	8	2.019	5
+
+11		L,U,R,D,D		6		0.0		5
+
+69	R,U,L,U,L,D,D,R,U,R,D,L,U,R,U,L,L,D,R,D,R	3812	1523.4650000000001	21
+
+69		R,U,L,U,L,D,D,R,U,R,D,L,U,R,U,L,L,D,R,D,R		279		48.053		21
+
+53	D,R,U,L,D,L,D,R,R	19	6.517	9
+
+53		D,R,U,L,D,L,D,R,R		14		4.343		9
+
+8	R,R	3	4.01	2
+
+8		R,R		3		4.006		2
+
+79	D,D,R,U,U,L,L,D,R,D,L,U,R,U,R,D,D	768	190.866	17
+
+79		D,D,R,U,U,L,L,D,R,D,L,U,R,U,R,D,D		187		38.568		17
+
+55	R,R,D,L,U,L,D,R,R	32	3.992	9
+
+55		R,R,D,L,U,L,D,R,R		20		4.034000000000001		9
+
+13	D,L,L,U,R,R,D	11	4.001	7
+
+13		D,L,L,U,R,R,D		8		0.0		7
+
+32	L,L,U,R,D,R,U,U,L,D,D,R	74	8.001	12
+
+32		L,L,U,R,D,R,U,U,L,D,D,R		18		4.005		12
